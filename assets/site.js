@@ -69,7 +69,73 @@
 		button.setAttribute('aria-label', button.getAttribute(toLight ? 'data-label-light' : 'data-label-dark') || '');
 	}
 
+	/**
+	 * OS の「動きを減らす」設定を、自動再生の可否にまで効かせるか。
+	 * true にすると、その設定の人には最初から止めた状態で見せる。
+	 * 既定は false。止める手段 (停止ボタン) は常に出しているので WCAG 2.2.2 は満たす。
+	 */
+	var PAUSE_WHEN_CALM = false;
+
+	/**
+	 * 自動再生する動画に停止ボタンを配線する。
+	 * 5 秒を超えて自動で動くものには止める手段が要る (WCAG 2.2.2)。
+	 * @returns {void}
+	 */
+	function wireVideos() {
+		var calm = PAUSE_WHEN_CALM
+			&& Boolean(window.matchMedia) && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		var figures = document.querySelectorAll('figure.has-video');
+		for (var i = 0; i < figures.length; i += 1) {
+			wireOne(figures[i], calm);
+		}
+	}
+
+	/**
+	 * 動画 1 つ分の配線。
+	 * @param {HTMLElement} figure video と .video-toggle を含む入れ物
+	 * @param {boolean} calm 最初から止めておくか
+	 * @returns {void}
+	 */
+	function wireOne(figure, calm) {
+		var video = figure.querySelector('video');
+		var button = figure.querySelector('.video-toggle');
+		if (!video || !button) return;
+
+		/**
+		 * ボタンの見た目と読み上げ文言を今の状態に合わせる。
+		 * @returns {void}
+		 */
+		function sync() {
+			var paused = video.paused;
+			button.setAttribute('data-state', paused ? 'paused' : 'playing');
+			button.setAttribute('aria-label', button.getAttribute(paused ? 'data-label-play' : 'data-label-pause') || '');
+		}
+
+		if (calm) {
+			video.removeAttribute('autoplay');
+			try {
+				video.pause();
+			} catch (error) {
+				// 再生前に呼ばれても問題にしない
+			}
+		}
+
+		button.addEventListener('click', function () {
+			if (video.paused) {
+				// 自動再生を拒まれることがある。失敗しても表示は保つ
+				var played = video.play();
+				if (played && typeof played.catch === 'function') played.catch(function () { sync(); });
+			} else {
+				video.pause();
+			}
+		});
+		video.addEventListener('play', sync);
+		video.addEventListener('pause', sync);
+		sync();
+	}
+
 	document.addEventListener('DOMContentLoaded', function () {
+		wireVideos();
 		var button = document.querySelector('.theme-toggle');
 		var stored = readStored();
 		// head の先読みスクリプトが既に属性を付けている。ここでは文言だけ合わせる

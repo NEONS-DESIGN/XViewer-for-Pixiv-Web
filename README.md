@@ -13,7 +13,7 @@ GitHub Pages で公開する静的サイト。ビルド工程は無い。
 | `en/privacy.html` | 英語のプライバシーポリシー |
 | `assets/style.css` | 全ページ共通の CSS |
 | `assets/site.js` | 配色の切り替えだけを行う JS |
-| `assets/img/` | アイコンとスクリーンショット |
+| `assets/img/` | アイコン、スクリーンショット、無限スクロールの動画 |
 | `.nojekyll` | GitHub Pages の Jekyll 処理を無効にする |
 
 配色トークンは拡張本体の `UI_DESIGN_KIT.md` §2 に合わせてある。値を変えるときは変数だけを直す。
@@ -47,10 +47,24 @@ python -m http.server 8000
 `http://localhost:8000/` を開く。ファイルを直接開く (`file://`) と相対パスは動くが、
 ルート相対のリンクだけ挙動が変わるので、確認はサーバー経由で行うこと。
 
-## スクリーンショットについて
+## スクリーンショットと動画について
 
-`assets/img/shot-*.png` は動作説明のためのデモ用データ。作品画像は作者自身のもので、
+`assets/img/shot-*` は動作説明のためのデモ用データ。作品画像は作者自身のもので、
 コメントやカウンタは説明のために差し込んだダミー値。その旨は各ページのフッターに明記している。
+
+`assets/img/infinite-scroll.mp4` は無限スクロールの実動作を録画したもの。
+pixiv 事務局の公式アカウント (`/users/11`) を実際にスクロールし、URL の `?p=` が追従する様子まで入っている。
+こちらは差し込みをしていない素の動作。
+
+動画は `<video autoplay loop muted playsinline>` で音無し・自動ループ再生。
+5 秒を超えて自動で動くものには止める手段が要る (WCAG 2.2.2) ので、右下に停止ボタンを常設している。
+OS の「動きを減らす」設定まで効かせて最初から止めたい場合は、`assets/site.js` の
+`PAUSE_WHEN_CALM` を `true` にする (既定は `false`)。
+差し替えるときはポスター画像 `infinite-scroll.jpg` も一緒に作り直すこと。
+
+```bash
+ffmpeg -i in.gif -vf "setpts=PTS/2.657,scale=1100:-2,minterpolate=fps=25:mi_mode=mci:mc_mode=aobmc:vsbmc=1"   -an -c:v libx264 -crf 30 -preset slow -pix_fmt yuv420p -movflags +faststart infinite-scroll.mp4
+```
 
 ## ライセンス
 
