@@ -52,18 +52,28 @@ python -m http.server 8000
 `assets/img/shot-*` は動作説明のためのデモ用データ。作品画像は作者自身のもので、
 コメントやカウンタは説明のために差し込んだダミー値。その旨は各ページのフッターに明記している。
 
-`assets/img/infinite-scroll.mp4` は無限スクロールの実動作を録画したもの。
-pixiv 事務局の公式アカウント (`/users/11`) を実際にスクロールし、URL の `?p=` が追従する様子まで入っている。
-こちらは差し込みをしていない素の動作。
+`assets/img/infinite-scroll.mp4` は無限スクロールの実動作を画面録画したもの。
+pixiv 事務局の公式アカウント (`/users/11`) を実際にスクロールしており、作品にもカウンタにも手を加えていない。
+ブラウザのアドレスバーまで写しているので、URL の `?p=` が画面に追従する様子もそのまま見える。
 
 動画は `<video autoplay loop muted playsinline>` で音無し・自動ループ再生。
 5 秒を超えて自動で動くものには止める手段が要る (WCAG 2.2.2) ので、右下に停止ボタンを常設している。
 OS の「動きを減らす」設定まで効かせて最初から止めたい場合は、`assets/site.js` の
 `PAUSE_WHEN_CALM` を `true` にする (既定は `false`)。
-差し替えるときはポスター画像 `infinite-scroll.jpg` も一緒に作り直すこと。
+
+**録画をそのまま置かないこと。** 画面録画は HEVC (H.265) で出ることが多く、Chrome と Firefox では再生できない。
+H.264 に変換し、ポスター画像 `infinite-scroll.jpg` も一緒に作り直す。
+`scale` の幅は表示幅 (約 560px) の 2 倍あれば足りる。
 
 ```bash
-ffmpeg -i in.gif -vf "setpts=PTS/2.657,scale=1100:-2,minterpolate=fps=25:mi_mode=mci:mc_mode=aobmc:vsbmc=1"   -an -c:v libx264 -crf 30 -preset slow -pix_fmt yuv420p -movflags +faststart infinite-scroll.mp4
+ffmpeg -i recording.mp4 -vf "scale=1280:-2" -an   -c:v libx264 -crf 32 -preset slow -pix_fmt yuv420p -movflags +faststart   assets/img/infinite-scroll.mp4
+ffmpeg -i assets/img/infinite-scroll.mp4 -frames:v 1 -q:v 3 assets/img/infinite-scroll.jpg
+```
+
+変換後は `codec_name` が `h264` になっていることを確かめる。
+
+```bash
+ffprobe -v error -show_entries stream=codec_name,width,height -of default=noprint_wrappers=1   assets/img/infinite-scroll.mp4
 ```
 
 ## ライセンス

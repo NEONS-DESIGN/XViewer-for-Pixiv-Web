@@ -542,6 +542,11 @@ code {
 	margin-top: var(--section-gap);
 }
 
+/* 左右を入れ替える段。order だけ変えると図が狭い側の列に入るので、列幅も入れ替える */
+.showcase.reverse {
+	grid-template-columns: 1.25fr 1fr;
+}
+
 .showcase.reverse .showcase-text {
 	order: 2;
 }
@@ -895,6 +900,10 @@ kbd {
 	.showcase {
 		grid-template-columns: 1fr;
 		gap: 28px;
+	}
+
+	.showcase.reverse {
+		grid-template-columns: 1fr;
 	}
 
 	.showcase.reverse .showcase-text {
